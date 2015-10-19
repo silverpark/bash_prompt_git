@@ -1,0 +1,142 @@
+# Returns "*" if the current git branch contains changes not staged for commit
+parse_git_changes() {
+  [[ $(git diff --shortstat 2> /dev/null | tail -n1) != "" ]]
+}
+
+parse_git_status_total() {
+    expr `git status --porcelain 2>/dev/null| wc -l`
+}
+
+# Get number of files added to the index (but uncommitted)
+parse_git_ready_to_be_committed() {
+    expr `git status --porcelain 2>/dev/null| egrep "^M|^D" | wc -l`
+}
+
+# Get number of total uncommited files
+parse_git_not_staged() {
+    expr `git status --porcelain 2>/dev/null| egrep "^( M| D)" | wc -l`
+}
+
+parse_git_wait_commit() {
+    expr `git status --porcelain 2>/dev/null| egrep "^( M| D|M|D)" | wc -l`
+}
+
+# Get number of files that are uncommitted and not added
+parse_git_untracked() {
+    expr `git status --porcelain 2>/dev/null| grep "^??" | wc -l`
+}
+
+# Get number of files stashed
+# Returns "S:N" where N is the number of stashed states (if any).
+parse_git_stash() {
+    expr `git stash list 2>/dev/null| wc -l`
+}
+
+# Get number of unmerged local and remote branch
+# Returns "Bum:N" where N is the number of unmerged local and remote
+# branches (if any).
+parse_git_branch_unmerged() {
+    expr `git branch --no-color -a --no-merged | wc -l`
+}
+
+# Returns "Up:N" where N is the number of unpushed local and remote
+# branches (if any).
+parse_git_unpushed() {
+  local unpushed=`expr $( (git branch --no-color -r --contains HEAD; \
+    git branch --no-color -r) | sort | uniq -u | wc -l )`
+  if [ "$unpushed" != "0" ]
+  then
+    echo "$unpushed"
+  fi
+}
+
+# Get the current git branch name (if available)
+git_prompt() {
+  local ref=$(git symbolic-ref HEAD 2>/dev/null | cut -d'/' -f3)
+  if [ "$ref" != "" ]
+  then
+    echo "($ref$(parse_git_dirty)$(parse_git_stash)) "
+  fi
+}
+
+create_prompt() {
+	
+	# GENERIC VARIABLE
+	RootPrompt="\#"
+	NoRootPrompt="\$"
+	LS_COUNT=$(ls -1 | wc -l | sed 's: ::g')
+	LS_SIZE=$(ls -lah | grep -m 1 total | sed 's/total //')
+	SYNCED_SYMBOL="*"
+
+    # PROMPT VARIABLE
+	PROMPT_FILE_AND_SIZE="${Green}(${LS_COUNT} files, ${LS_SIZE}b)"
+	PROMPT_DATE="${BBlue}(\d)-(\t)"
+	PROMPT_HISTORY="${BRed}{#\#--!\!}"
+	PROMPT_UNPUSHED_SYMBOL="${Cyan}P:${BYellow}->${BRed}$num$NOC"
+	PROMPT_UNPULLED_SYMBOL="${Cyan}P:${BYellow}<-${BRed}$num$NOC"
+	
+	# LEFTPROMPT VARIABLE
+	LEFTPROMPT="\n"
+	LEFTPROMPT=$LEFTPROMPT"$PROMPT_HISTORY"
+	LEFTPROMPT=$LEFTPROMPT" $PROMPT_DATE"
+	LEFTPROMPT=$LEFTPROMPT"\n\[$Cyan\]\u@\h":"${Yellow}\w"
+
+    # [BRANCH]
+    GITSTATUS=$(git status 2> /dev/null)
+    if [ $? -eq 0 ]; then
+
+		# [BRANCH*]
+		BRANCH=`git rev-parse --abbrev-ref HEAD`
+		SYNC_COMMIT="$(parse_git_wait_commit)"
+		if [ ${SYNC_COMMIT} -ne "0" ]; then
+			PROMPT_GIT="${Red}[$BRANCH$SYNCED_SYMBOL]"
+		else
+			PROMPT_GIT="${Green}[$BRANCH]"
+		fi
+        
+        # [READY_COMMITED]
+        READY_COMMITED="$(parse_git_ready_to_be_committed)"
+        if [ ${READY_COMMITED} -ne "0" ]; then
+            PROMPT_GIT=$PROMPT_GIT" ${NOC}A: ${Green}$READY_COMMITED"         
+        fi
+
+        # [STAGED]
+        STAGED="$(parse_git_not_staged)"
+        if [ ${STAGED} -ne "0" ]; then
+            PROMPT_GIT=$PROMPT_GIT" ${NOC}M: ${Red}$STAGED"               
+        fi
+
+        # [UNTRACKED]
+        UNTRACKED="$(parse_git_untracked)"
+        if [ ${UNTRACKED} -ne "0" ]; then
+            PROMPT_GIT=$PROMPT_GIT" ${NOC}U: ${Purple}$UNTRACKED"             
+        fi
+
+        # [STASH]
+        STASH="$(parse_git_stash)"
+        if [ ${STASH} -ne "0" ]; then
+            PROMPT_GIT=$PROMPT_GIT" ${NOC}S: ${IBlue}$STASH"               
+        fi
+
+		# [U:<-1] [U:->1]
+        status=$(git status | grep -e "^# Your branch is")
+
+        if echo $status | grep 'ahead' > /dev/null ; then
+            num=$(echo $status | grep -o "[0-9]*")
+            PROMPT_GIT=$PROMPT_GIT" ${PROMPT_UNPUSHED_SYMBOL}"
+        elif echo $status | grep 'behind' > /dev/null ; then
+            num=$(echo $status | grep -o "[0-9]*")
+            PROMPT_GIT=$PROMPT_GIT" ${PROMPT_UNPULLED_SYMBOL}"
+        fi
+		
+		LEFTPROMPT=$LEFTPROMPT" $PROMPT_GIT"
+        
+    fi
+
+    # PROMPT PS1
+    if [ $EUID -ne 0 ]; then
+        PS1=$LEFTPROMPT"${NoColor} "$NoRootPrompt" ${NOC}"
+    else
+        PS1=$LEFTPROMPT"${NoColor} "$RootPrompt" ${NOC}"
+    fi
+}
