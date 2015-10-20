@@ -1,7 +1,7 @@
 Bash Prompt Git
 ===============
 
-Customed powerfull bash prompt.
+Customed bash prompt
 
 Features:
  * the history number of this command
@@ -16,16 +16,13 @@ Features:
  * GIT signalization about of ahead/behind remote repository
  * GIT counter of commits about ahed/behind remote repository
 
-Example:
-```
-    {#33--!531} (lun. oct. 19)-(22:19:42)
-    dev@debian:/space/www/silex_api [master] A: 4 M: 1 U: 1 S: 2 U:->1 $
-```
+Exemple prompt without git
 
-More screenshots and demonstration on 
+![Example prompt without git](screen/prompt.png)
 
-https://github.com/silverpark/bash-git-prompt/wiki/Demonstration
+Exemple prompt git
 
+![Example prompt git](screen/prompt_git.png)
 
 INSTALLATION
 ============
