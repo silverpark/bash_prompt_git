@@ -9,7 +9,7 @@ parse_git_status_total() {
 
 # Get number of files added to the index (but uncommitted)
 parse_git_ready_to_be_committed() {
-    expr `git status --porcelain 2>/dev/null| egrep "^A|^M|^D" | wc -l`
+    expr `git status --porcelain 2>/dev/null| egrep "^A|^M|^D|^R" | wc -l`
 }
 
 # Get number of total uncommited files
