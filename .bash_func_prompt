@@ -14,7 +14,7 @@ parse_git_ready_to_be_committed() {
 
 # Get number of total uncommited files
 parse_git_not_staged() {
-    expr `git status --porcelain 2>/dev/null| egrep "^( M| D)" | wc -l`
+    expr `git status --porcelain 2>/dev/null| egrep "^( M| D|AM|RM)" | wc -l`
 }
 
 parse_git_wait_commit() {
@@ -95,40 +95,40 @@ create_prompt() {
 	    PROMPT_GIT="${Green}[$BRANCH]"
 	fi
         
-        # [READY_COMMITED]
-        READY_COMMITED="$(parse_git_ready_to_be_committed)"
-        if [ ${READY_COMMITED} -ne "0" ]; then
-            PROMPT_GIT=$PROMPT_GIT" ${NOC}A: ${Green}$READY_COMMITED"         
-        fi
+    # [READY_COMMITED]
+    READY_COMMITED="$(parse_git_ready_to_be_committed)"
+    if [ ${READY_COMMITED} -ne "0" ]; then
+        PROMPT_GIT=$PROMPT_GIT" ${NOC}A: ${Green}$READY_COMMITED"         
+    fi
 
-        # [STAGED]
-        STAGED="$(parse_git_not_staged)"
-        if [ ${STAGED} -ne "0" ]; then
-            PROMPT_GIT=$PROMPT_GIT" ${NOC}M: ${Red}$STAGED"               
-        fi
+    # [STAGED]
+    STAGED="$(parse_git_not_staged)"
+    if [ ${STAGED} -ne "0" ]; then
+        PROMPT_GIT=$PROMPT_GIT" ${NOC}M: ${Red}$STAGED"               
+    fi
 
-        # [UNTRACKED]
-        UNTRACKED="$(parse_git_untracked)"
-        if [ ${UNTRACKED} -ne "0" ]; then
-            PROMPT_GIT=$PROMPT_GIT" ${NOC}U: ${Purple}$UNTRACKED"             
-        fi
+    # [UNTRACKED]
+    UNTRACKED="$(parse_git_untracked)"
+    if [ ${UNTRACKED} -ne "0" ]; then
+        PROMPT_GIT=$PROMPT_GIT" ${NOC}U: ${Purple}$UNTRACKED"             
+    fi
 
-        # [STASH]
-        STASH="$(parse_git_stash)"
-        if [ ${STASH} -ne "0" ]; then
-            PROMPT_GIT=$PROMPT_GIT" ${NOC}S: ${BBlue}$STASH"               
-        fi
+    # [STASH]
+    STASH="$(parse_git_stash)"
+    if [ ${STASH} -ne "0" ]; then
+        PROMPT_GIT=$PROMPT_GIT" ${NOC}S: ${BBlue}$STASH"               
+    fi
 
 	# [U:<-1] [U:->1]
-        status=$(git status | grep -e "^# Your branch is")
+    status=$(git status | grep -e "^# Your branch is")
 
-        if echo $status | grep 'ahead' > /dev/null ; then
-            num=$(echo $status | grep -o "[0-9]*")
-            PROMPT_GIT=$PROMPT_GIT" ${PROMPT_UNPUSHED_SYMBOL}"
-        elif echo $status | grep 'behind' > /dev/null ; then
-            num=$(echo $status | grep -o "[0-9]*")
-            PROMPT_GIT=$PROMPT_GIT" ${PROMPT_UNPULLED_SYMBOL}"
-        fi
+    if echo $status | grep 'ahead' > /dev/null ; then
+        num=$(echo $status | grep -o "[0-9]*")
+        PROMPT_GIT=$PROMPT_GIT" ${PROMPT_UNPUSHED_SYMBOL}"
+    elif echo $status | grep 'behind' > /dev/null ; then
+        num=$(echo $status | grep -o "[0-9]*")
+        PROMPT_GIT=$PROMPT_GIT" ${PROMPT_UNPULLED_SYMBOL}"
+    fi
 		
 	LEFTPROMPT=$LEFTPROMPT" $PROMPT_GIT"
         
