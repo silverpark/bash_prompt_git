@@ -9,7 +9,7 @@ parse_git_status_total() {
 
 # Get number of files added to the index (but uncommitted)
 parse_git_ready_to_be_committed() {
-    expr `git status --porcelain 2>/dev/null| egrep "^A|^M|^D|^R" | wc -l`
+    expr `git status --porcelain 2>/dev/null| egrep "^A|^M|^D|^R|^C" | wc -l`
 }
 
 # Get number of total uncommited files
@@ -61,38 +61,39 @@ git_prompt() {
 
 create_prompt() {
 	
-	# GENERIC VARIABLE
-	RootPrompt="\#"
-	NoRootPrompt="\$"
-	LS_COUNT=$(ls -1 | wc -l | sed 's: ::g')
-	LS_SIZE=$(ls -lah | grep -m 1 total | sed 's/total //')
-	SYNCED_SYMBOL="*"
+    # GENERIC VARIABLE
+    RootPrompt="\#"
+    NoRootPrompt="\$"
+    LS_COUNT=$(ls -1 | wc -l | sed 's: ::g')
+    LS_SIZE=$(ls -lah | grep -m 1 total | sed 's/total //')
+    SYNCED_SYMBOL="*"
 
     # PROMPT VARIABLE
-	PROMPT_FILE_AND_SIZE="${Green}(${LS_COUNT} files, ${LS_SIZE}b)"
-	PROMPT_DATE="${BBlue}(\d)-(\t)"
-	PROMPT_HISTORY="${BRed}{#\#--!\!}"
-	PROMPT_UNPUSHED_SYMBOL="${Cyan}P:${BYellow}->${BRed}$num$NOC"
-	PROMPT_UNPULLED_SYMBOL="${Cyan}P:${BYellow}<-${BRed}$num$NOC"
+    PROMPT_FILE_AND_SIZE="${Green}(${LS_COUNT} files, ${LS_SIZE}b)"
+    PROMPT_DATE="${BBlue}(\d)-(\t)"
+    PROMPT_HISTORY="${BRed}{#\#--!\!}"
+    PROMPT_UNPUSHED_SYMBOL="${Cyan}P:${BYellow}->${BRed}$num$NOC"
+    PROMPT_UNPULLED_SYMBOL="${Cyan}P:${BYellow}<-${BRed}$num$NOC"
 	
-	# LEFTPROMPT VARIABLE
-	LEFTPROMPT="\n"
-	LEFTPROMPT=$LEFTPROMPT"$PROMPT_HISTORY"
-	LEFTPROMPT=$LEFTPROMPT" $PROMPT_DATE"
-	LEFTPROMPT=$LEFTPROMPT"\n${Cyan}\u@\h":"${Yellow}\w"
+    # LEFTPROMPT VARIABLE
+    printf "\n"
+    LEFTPROMPT="\[\e]0;\u@\h:\W\a\]"
+    LEFTPROMPT=$LEFTPROMPT"$PROMPT_HISTORY"
+    LEFTPROMPT=$LEFTPROMPT" $PROMPT_DATE"
+    LEFTPROMPT=$LEFTPROMPT"\n${Cyan}\u@\h":"${Yellow}\w"
 
     # [BRANCH]
     GITSTATUS=$(git status 2> /dev/null)
     if [ $? -eq 0 ]; then
 
-		# [BRANCH*]
-		BRANCH=`git rev-parse --abbrev-ref HEAD`
-		SYNC_COMMIT="$(parse_git_wait_commit)"
-		if [ ${SYNC_COMMIT} -ne "0" ]; then
-			PROMPT_GIT="${Red}[$BRANCH$SYNCED_SYMBOL]"
-		else
-			PROMPT_GIT="${Green}[$BRANCH]"
-		fi
+        # [BRANCH*]
+	BRANCH=`git rev-parse --abbrev-ref HEAD`
+	SYNC_COMMIT="$(parse_git_wait_commit)"
+	if [ ${SYNC_COMMIT} -ne "0" ]; then
+	    PROMPT_GIT="${Red}[$BRANCH$SYNCED_SYMBOL]"
+	else
+	    PROMPT_GIT="${Green}[$BRANCH]"
+	fi
         
         # [READY_COMMITED]
         READY_COMMITED="$(parse_git_ready_to_be_committed)"
@@ -118,7 +119,7 @@ create_prompt() {
             PROMPT_GIT=$PROMPT_GIT" ${NOC}S: ${BBlue}$STASH"               
         fi
 
-		# [U:<-1] [U:->1]
+	# [U:<-1] [U:->1]
         status=$(git status | grep -e "^# Your branch is")
 
         if echo $status | grep 'ahead' > /dev/null ; then
@@ -129,7 +130,7 @@ create_prompt() {
             PROMPT_GIT=$PROMPT_GIT" ${PROMPT_UNPULLED_SYMBOL}"
         fi
 		
-		LEFTPROMPT=$LEFTPROMPT" $PROMPT_GIT"
+	LEFTPROMPT=$LEFTPROMPT" $PROMPT_GIT"
         
     fi
 
