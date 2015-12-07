@@ -39,4 +39,5 @@ Copy all '.bash' files to your home directory
     cd bash_prompt_git
     cp -rfp ./.bash* ~/
     cat .install >> ~/.bashrc
+    source ~/.bashrc
 ```
