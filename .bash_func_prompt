@@ -14,11 +14,11 @@ parse_git_ready_to_be_committed() {
 
 # Get number of total uncommited files
 parse_git_not_staged() {
-    expr `git status --porcelain 2>/dev/null| egrep "^( M| D|AM|RM)" | wc -l`
+    expr `git status --porcelain 2>/dev/null| egrep "^( M| D|AM|RM|MM)" | wc -l`
 }
 
 parse_git_wait_commit() {
-    expr `git status --porcelain 2>/dev/null| egrep "^( M| D|A|M|D)" | wc -l`
+    expr `git status --porcelain 2>/dev/null| egrep "^( M| D|A|M|D|MM)" | wc -l`
 }
 
 # Get number of files that are uncommitted and not added
